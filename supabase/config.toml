@@ -1,0 +1,4 @@
+project_id = "zavfyaoyzmoivpvqitjx"
+
+[functions.ocr-marksheet]
+verify_jwt = false
