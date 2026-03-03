@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { motion } from 'framer-motion';
@@ -13,6 +14,7 @@ interface MarksheetRow {
   gpa: number | null;
   created_at: string;
   extracted_data: any;
+  image_url: string | null;
 }
 
 const Dashboard = () => {
@@ -20,6 +22,8 @@ const Dashboard = () => {
   const [marksheets, setMarksheets] = useState<MarksheetRow[]>([]);
   const [cgpa, setCgpa] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
+  const [selectedMarksheet, setSelectedMarksheet] = useState<MarksheetRow | null>(null);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -41,6 +45,17 @@ const Dashboard = () => {
     };
     fetch();
   }, [user]);
+
+  const handleSelectSemester = async (m: MarksheetRow) => {
+    setSelectedMarksheet(m);
+    setImageUrl(null);
+    if (m.image_url) {
+      const { data } = await supabase.storage
+        .from('marksheets')
+        .createSignedUrl(m.image_url, 300);
+      if (data?.signedUrl) setImageUrl(data.signedUrl);
+    }
+  };
 
   const latestGPA = marksheets.length > 0 ? marksheets[marksheets.length - 1].gpa : null;
   const totalSemesters = marksheets.filter(m => m.gpa !== null).length;
@@ -128,7 +143,8 @@ const Dashboard = () => {
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: i * 0.05 }}
-                    className="flex items-center justify-between p-4 rounded-lg bg-accent/50 hover:bg-accent transition-colors"
+                    className="flex items-center justify-between p-4 rounded-lg bg-accent/50 hover:bg-accent transition-colors cursor-pointer"
+                    onClick={() => handleSelectSemester(m)}
                   >
                     <div className="flex items-center gap-4">
                       <div className="bg-gradient-primary text-primary-foreground font-display font-bold text-sm w-10 h-10 rounded-lg flex items-center justify-center">
@@ -153,6 +169,30 @@ const Dashboard = () => {
             )}
           </CardContent>
         </Card>
+
+        {/* Marksheet Detail Dialog */}
+        <Dialog open={!!selectedMarksheet} onOpenChange={(open) => { if (!open) { setSelectedMarksheet(null); setImageUrl(null); } }}>
+          <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="font-display">
+                Semester {selectedMarksheet?.semester} Marksheet
+              </DialogTitle>
+            </DialogHeader>
+            {imageUrl ? (
+              <img src={imageUrl} alt={`Semester ${selectedMarksheet?.semester} marksheet`} className="w-full rounded-lg border" />
+            ) : selectedMarksheet?.image_url ? (
+              <p className="text-muted-foreground text-sm text-center py-8">Loading image...</p>
+            ) : (
+              <p className="text-muted-foreground text-sm text-center py-8">No marksheet image uploaded for this semester</p>
+            )}
+            {selectedMarksheet?.gpa !== null && selectedMarksheet?.gpa !== undefined && (
+              <div className="flex items-center justify-between p-4 rounded-lg bg-accent/50">
+                <span className="text-sm font-medium">GPA</span>
+                <span className="font-display font-bold text-lg">{Number(selectedMarksheet.gpa).toFixed(2)}</span>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   );
