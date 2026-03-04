@@ -80,9 +80,8 @@ const Index = () => {
                 </Button>
                 <Button
                   size="lg"
-                  variant="outline"
                   onClick={() => navigate('/auth')}
-                  className="border-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground/10"
+                  className="bg-primary-foreground text-primary hover:bg-primary-foreground/90 font-semibold px-8 shadow-lg"
                 >
                   Sign In
                 </Button>
