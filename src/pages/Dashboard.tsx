@@ -5,7 +5,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { motion } from 'framer-motion';
-import { TrendingUp, BookOpen, Award, Percent } from 'lucide-react';
+import { TrendingUp, BookOpen, Award, Percent, ArrowLeft, Eye, Trash2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 import { cgpaToPercentage } from '@/lib/gpa-calculator';
 
 interface MarksheetRow {
@@ -19,6 +22,7 @@ interface MarksheetRow {
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [marksheets, setMarksheets] = useState<MarksheetRow[]>([]);
   const [cgpa, setCgpa] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
@@ -57,6 +61,35 @@ const Dashboard = () => {
     }
   };
 
+  const handleDeleteSemester = async (m: MarksheetRow, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!user) return;
+    // Delete storage file
+    if (m.image_url) {
+      await supabase.storage.from('marksheets').remove([m.image_url]);
+    }
+    // Delete DB record
+    await supabase.from('marksheets').delete().eq('id', m.id);
+    // Recalculate CGPA
+    const remaining = marksheets.filter(ms => ms.id !== m.id);
+    setMarksheets(remaining);
+    let totalW = 0, totalC = 0;
+    for (const ms of remaining) {
+      if (ms.gpa !== null && ms.extracted_data) {
+        const c = (ms.extracted_data as any[]).reduce((s: number, sub: any) => s + (sub.credits || 0), 0);
+        totalW += Number(ms.gpa) * c;
+        totalC += c;
+      }
+    }
+    const newCgpa = totalC > 0 ? Math.round((totalW / totalC) * 100) / 100 : 0;
+    setCgpa(totalC > 0 ? newCgpa : null);
+    const { data: ec } = await supabase.from('cgpa_records').select('id').eq('user_id', user.id).maybeSingle();
+    if (ec) {
+      await supabase.from('cgpa_records').update({ cgpa: newCgpa, total_credits: totalC }).eq('id', ec.id);
+    }
+    toast.success(`Semester ${m.semester} deleted`);
+  };
+
   const latestGPA = marksheets.length > 0 ? marksheets[marksheets.length - 1].gpa : null;
   const totalSemesters = marksheets.filter(m => m.gpa !== null).length;
 
@@ -90,9 +123,14 @@ const Dashboard = () => {
   return (
     <DashboardLayout>
       <div className="space-y-8">
-        <div>
-          <h1 className="text-3xl font-display font-bold tracking-tight">Dashboard</h1>
-          <p className="text-muted-foreground mt-1">Your academic performance at a glance</p>
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="icon" onClick={() => navigate('/')} className="shrink-0">
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <div>
+            <h1 className="text-3xl font-display font-bold tracking-tight">Dashboard</h1>
+            <p className="text-muted-foreground mt-1">Your academic performance at a glance</p>
+          </div>
         </div>
 
         {/* Stats cards */}
@@ -157,11 +195,19 @@ const Dashboard = () => {
                         </p>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className="font-display font-bold text-lg">
-                        {m.gpa !== null ? Number(m.gpa).toFixed(2) : '—'}
-                      </p>
-                      <p className="text-xs text-muted-foreground">GPA</p>
+                    <div className="text-right flex items-center gap-3">
+                      <div>
+                        <p className="font-display font-bold text-lg">
+                          {m.gpa !== null ? Number(m.gpa).toFixed(2) : '—'}
+                        </p>
+                        <p className="text-xs text-muted-foreground">GPA</p>
+                      </div>
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); handleSelectSemester(m); }}>
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={(e) => handleDeleteSemester(m, e)}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
                   </motion.div>
                 ))}
