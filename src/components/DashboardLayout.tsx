@@ -1,7 +1,8 @@
 import { ReactNode } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { GraduationCap, LayoutDashboard, Upload, Calculator, BarChart3, LogOut } from 'lucide-react';
+import { GraduationCap, LayoutDashboard, Upload, Calculator, BarChart3, LogOut, User } from 'lucide-react';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -52,8 +53,20 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
           })}
         </nav>
 
-        <div className="p-4 border-t border-sidebar-border">
-          <p className="text-xs text-sidebar-foreground/50 mb-3 truncate px-2">{user?.email}</p>
+        <div className="p-4 border-t border-sidebar-border space-y-3">
+          <div className="flex items-center gap-3 px-2">
+            <Avatar className="h-9 w-9">
+              <AvatarFallback className="bg-secondary text-secondary-foreground text-sm font-semibold">
+                {user?.email?.charAt(0).toUpperCase() || <User className="h-4 w-4" />}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-sidebar-foreground truncate">
+                {user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User'}
+              </p>
+              <p className="text-xs text-sidebar-foreground/50 truncate">{user?.email}</p>
+            </div>
+          </div>
           <Button
             variant="ghost"
             onClick={signOut}
