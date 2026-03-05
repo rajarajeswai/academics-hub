@@ -5,8 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { motion } from 'framer-motion';
-import { TrendingUp, BookOpen, Award, Percent, ArrowLeft, Eye, Trash2 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { TrendingUp, BookOpen, Award, Percent, Eye, Trash2, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { cgpaToPercentage } from '@/lib/gpa-calculator';
@@ -22,7 +21,6 @@ interface MarksheetRow {
 
 const Dashboard = () => {
   const { user } = useAuth();
-  const navigate = useNavigate();
   const [marksheets, setMarksheets] = useState<MarksheetRow[]>([]);
   const [cgpa, setCgpa] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
@@ -123,14 +121,9 @@ const Dashboard = () => {
   return (
     <DashboardLayout>
       <div className="space-y-8">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate('/')} className="shrink-0">
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div>
-            <h1 className="text-3xl font-display font-bold tracking-tight">Dashboard</h1>
-            <p className="text-muted-foreground mt-1">Your academic performance at a glance</p>
-          </div>
+        <div>
+          <h1 className="text-3xl font-display font-bold tracking-tight">Dashboard</h1>
+          <p className="text-muted-foreground mt-1">Your academic performance at a glance</p>
         </div>
 
         {/* Stats cards */}
@@ -225,7 +218,29 @@ const Dashboard = () => {
               </DialogTitle>
             </DialogHeader>
             {imageUrl ? (
-              <img src={imageUrl} alt={`Semester ${selectedMarksheet?.semester} marksheet`} className="w-full rounded-lg border" />
+              <div className="space-y-3">
+                <img src={imageUrl} alt={`Semester ${selectedMarksheet?.semester} marksheet`} className="w-full rounded-lg border" />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  onClick={async () => {
+                    try {
+                      const response = await fetch(imageUrl);
+                      const blob = await response.blob();
+                      await navigator.clipboard.write([
+                        new ClipboardItem({ [blob.type]: blob }),
+                      ]);
+                      toast.success('Image copied to clipboard');
+                    } catch {
+                      toast.error('Failed to copy image');
+                    }
+                  }}
+                >
+                  <Copy className="h-4 w-4 mr-2" />
+                  Copy Image
+                </Button>
+              </div>
             ) : selectedMarksheet?.image_url ? (
               <p className="text-muted-foreground text-sm text-center py-8">Loading image...</p>
             ) : (
