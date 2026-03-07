@@ -5,10 +5,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { motion } from 'framer-motion';
-import { TrendingUp, BookOpen, Award, Percent, Eye, Trash2, Copy } from 'lucide-react';
+import { TrendingUp, BookOpen, Award, Percent, Eye, Trash2, Copy, BarChart3, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { cgpaToPercentage } from '@/lib/gpa-calculator';
+import { generateSemesterReport, downloadReport } from '@/lib/report-generator';
+import { SemesterAnalysisDialog } from '@/components/SemesterAnalysisDialog';
 
 interface MarksheetRow {
   id: string;
