@@ -273,6 +273,15 @@ const Dashboard = () => {
             )}
           </DialogContent>
         </Dialog>
+
+        {/* Semester Analysis Dialog */}
+        <SemesterAnalysisDialog
+          open={!!analysisMarksheet}
+          onOpenChange={(open) => { if (!open) setAnalysisMarksheet(null); }}
+          semester={analysisMarksheet?.semester || 0}
+          gpa={analysisMarksheet?.gpa ?? null}
+          subjects={analysisMarksheet?.extracted_data as any[] | null}
+        />
       </div>
     </DashboardLayout>
   );
