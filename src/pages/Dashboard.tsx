@@ -28,6 +28,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [selectedMarksheet, setSelectedMarksheet] = useState<MarksheetRow | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [analysisMarksheet, setAnalysisMarksheet] = useState<MarksheetRow | null>(null);
 
   useEffect(() => {
     if (!user) return;
