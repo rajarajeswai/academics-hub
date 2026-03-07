@@ -180,6 +180,14 @@ const Dashboard = () => {
                     className="flex items-center justify-between p-4 rounded-lg bg-accent/50 hover:bg-accent transition-colors cursor-pointer"
                     onClick={() => handleSelectSemester(m)}
                   >
+                    {/* ... existing semester row content stays ... */}
+                    key={m.id}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.05 }}
+                    className="flex items-center justify-between p-4 rounded-lg bg-accent/50 hover:bg-accent transition-colors cursor-pointer"
+                    onClick={() => handleSelectSemester(m)}
+                  >
                     <div className="flex items-center gap-4">
                       <div className="bg-gradient-primary text-primary-foreground font-display font-bold text-sm w-10 h-10 rounded-lg flex items-center justify-center">
                         S{m.semester}
