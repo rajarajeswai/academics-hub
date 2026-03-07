@@ -5,10 +5,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { motion } from 'framer-motion';
-import { TrendingUp, BookOpen, Award, Percent, Eye, Trash2, Copy } from 'lucide-react';
+import { TrendingUp, BookOpen, Award, Percent, Eye, Trash2, Copy, BarChart3, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { cgpaToPercentage } from '@/lib/gpa-calculator';
+import { generateSemesterReport, downloadReport } from '@/lib/report-generator';
+import { SemesterAnalysisDialog } from '@/components/SemesterAnalysisDialog';
 
 interface MarksheetRow {
   id: string;
@@ -26,6 +28,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [selectedMarksheet, setSelectedMarksheet] = useState<MarksheetRow | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [analysisMarksheet, setAnalysisMarksheet] = useState<MarksheetRow | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -188,22 +191,38 @@ const Dashboard = () => {
                         </p>
                       </div>
                     </div>
-                    <div className="text-right flex items-center gap-3">
-                      <div>
+                    <div className="text-right flex items-center gap-2">
+                      <div className="mr-1">
                         <p className="font-display font-bold text-lg">
                           {m.gpa !== null ? Number(m.gpa).toFixed(2) : '—'}
                         </p>
                         <p className="text-xs text-muted-foreground">GPA</p>
                       </div>
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); handleSelectSemester(m); }}>
+                      <Button variant="ghost" size="icon" className="h-8 w-8" title="View marksheet" onClick={(e) => { e.stopPropagation(); handleSelectSemester(m); }}>
                         <Eye className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={(e) => handleDeleteSemester(m, e)}>
+                      <Button variant="ghost" size="icon" className="h-8 w-8" title="Performance analysis" onClick={(e) => { e.stopPropagation(); setAnalysisMarksheet(m); }}>
+                        <BarChart3 className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" title="Delete semester" onClick={(e) => handleDeleteSemester(m, e)}>
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                   </motion.div>
                 ))}
+                {/* Download Report Button */}
+                <Button
+                  variant="outline"
+                  className="w-full mt-4"
+                  onClick={() => {
+                    const report = generateSemesterReport(marksheets, cgpa);
+                    downloadReport(report, 'academic-report.txt');
+                    toast.success('Report downloaded');
+                  }}
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Download Report
+                </Button>
               </div>
             )}
           </CardContent>
@@ -254,6 +273,15 @@ const Dashboard = () => {
             )}
           </DialogContent>
         </Dialog>
+
+        {/* Semester Analysis Dialog */}
+        <SemesterAnalysisDialog
+          open={!!analysisMarksheet}
+          onOpenChange={(open) => { if (!open) setAnalysisMarksheet(null); }}
+          semester={analysisMarksheet?.semester || 0}
+          gpa={analysisMarksheet?.gpa ?? null}
+          subjects={analysisMarksheet?.extracted_data as any[] | null}
+        />
       </div>
     </DashboardLayout>
   );
