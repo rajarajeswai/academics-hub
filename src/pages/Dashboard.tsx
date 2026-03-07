@@ -191,17 +191,20 @@ const Dashboard = () => {
                         </p>
                       </div>
                     </div>
-                    <div className="text-right flex items-center gap-3">
-                      <div>
+                    <div className="text-right flex items-center gap-2">
+                      <div className="mr-1">
                         <p className="font-display font-bold text-lg">
                           {m.gpa !== null ? Number(m.gpa).toFixed(2) : '—'}
                         </p>
                         <p className="text-xs text-muted-foreground">GPA</p>
                       </div>
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); handleSelectSemester(m); }}>
+                      <Button variant="ghost" size="icon" className="h-8 w-8" title="View marksheet" onClick={(e) => { e.stopPropagation(); handleSelectSemester(m); }}>
                         <Eye className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={(e) => handleDeleteSemester(m, e)}>
+                      <Button variant="ghost" size="icon" className="h-8 w-8" title="Performance analysis" onClick={(e) => { e.stopPropagation(); setAnalysisMarksheet(m); }}>
+                        <BarChart3 className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" title="Delete semester" onClick={(e) => handleDeleteSemester(m, e)}>
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
